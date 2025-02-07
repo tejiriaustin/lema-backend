@@ -22,9 +22,8 @@ This project is my submission for the Lema Fullstack Engineer assessment. I'm ex
    ```
 
 ## Features
-- Invoice management
-- Basic reporting
-- (Add any other key features you've implemented)
+- User management
+- Post management
 
 ## API Documentation
 Check out the [Postman Documentation](https://documenter.getpostman.com/view/11784799/lema-api) for details on the API endpoints.
