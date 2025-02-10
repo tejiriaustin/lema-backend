@@ -75,32 +75,6 @@ func (c *UserController) GetUser(
 	}
 }
 
-func (c *UserController) GetUserCount(
-	userService service.UserServiceInterface,
-	usersRepo *repository.Repository[models.User],
-) gin.HandlerFunc {
-	return func(ctx *gin.Context) {
-		var req requests.GetUserRequest
-
-		err := ctx.BindJSON(&req)
-		if err != nil {
-			response.FormatResponse(ctx, http.StatusBadRequest, err.Error(), nil)
-			return
-		}
-
-		count, err := userService.GetUserCount(ctx, usersRepo)
-		if err != nil {
-			response.FormatResponse(ctx, http.StatusBadRequest, err.Error(), nil)
-			return
-		}
-
-		payload := map[string]interface{}{
-			"count": count,
-		}
-		response.FormatResponse(ctx, http.StatusOK, "successful", payload)
-	}
-}
-
 func (c *UserController) GetUsers(
 	userService service.UserServiceInterface,
 	usersRepo *repository.Repository[models.User],
