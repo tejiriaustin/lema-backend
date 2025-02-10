@@ -6,6 +6,7 @@ import (
 
 func SingleUserResponse(account *models.User) map[string]interface{} {
 	return map[string]interface{}{
+		"id":       account.ID.String(),
 		"email":    account.Email,
 		"fullName": account.FullName,
 		"address":  SingleAddressResponse(account.Address),
@@ -14,6 +15,7 @@ func SingleUserResponse(account *models.User) map[string]interface{} {
 
 func SingleAddressResponse(address *models.Address) map[string]interface{} {
 	return map[string]interface{}{
+		"id":      address.ID.String(),
 		"street":  address.Street,
 		"city":    address.City,
 		"state":   address.State,
@@ -31,6 +33,7 @@ func MultipleUserResponse(users []*models.User) []map[string]interface{} {
 
 func SinglePostResponse(post *models.Post) map[string]interface{} {
 	return map[string]interface{}{
+		"id":    post.ID.String(),
 		"title": post.Title,
 		"body":  post.Body,
 	}

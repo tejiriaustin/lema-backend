@@ -39,7 +39,7 @@ func BindRoutes(
 	posts := r.Group("/posts")
 	{
 		posts.POST("", controllers.PostController.CreatePost(sc.UserService, sc.PostService, repo.UserRepo, repo.PostRepo)) // POST /api/v1/posts
-		posts.GET("", controllers.PostController.GetPosts(sc.PostService, repo.PostRepo))                                   // GET /api/v1/posts?userId=1
+		posts.GET("", controllers.PostController.GetPosts(sc.UserService, sc.PostService, repo.UserRepo, repo.PostRepo))    // GET /api/v1/posts?userId=1
 		posts.DELETE("/:id", controllers.PostController.DeletePost(sc.PostService, repo.PostRepo))                          // DELETE /api/v1/posts/:id
 	}
 }

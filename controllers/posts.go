@@ -62,13 +62,21 @@ func (c *PostController) CreatePost(
 }
 
 func (c *PostController) GetPosts(
+	userService service.UserServiceInterface,
 	postService service.PostServiceInterface,
+	userRepo *repository.Repository[models.User],
 	postsRepo *repository.Repository[models.Post],
 ) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
-		userID := ctx.Param("user_id")
+		userID := ctx.Query("user_id")
 		if userID == "" {
-			response.FormatResponse(ctx, http.StatusBadRequest, "post id is required", nil)
+			response.FormatResponse(ctx, http.StatusBadRequest, "user id is required", nil)
+			return
+		}
+
+		user, err := userService.GetUserByID(ctx, userID, userRepo)
+		if err != nil || user == nil {
+			response.FormatResponse(ctx, http.StatusBadRequest, "Invalid User ID", nil)
 			return
 		}
 
@@ -88,7 +96,8 @@ func (c *PostController) GetPosts(
 
 		payload := map[string]interface{}{
 			"paginationData": paginationData,
-			"users":          response.MultiplePostResponse(posts),
+			"posts":          response.MultiplePostResponse(posts),
+			"user":           response.SingleUserResponse(user),
 		}
 
 		response.FormatResponse(ctx, http.StatusOK, "successful", payload)

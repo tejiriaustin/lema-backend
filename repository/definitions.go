@@ -11,7 +11,7 @@ type (
 		Create(ctx context.Context, data T) (*T, error)
 	}
 	Finder[T models.Models] interface {
-		FindOne(ctx context.Context, queryFilter *Query) (*T, error)
+		FindOne(ctx context.Context, queryFilter *Query, preloads ...string) (*T, error)
 		FindManyPaginated(ctx context.Context, queryFilter *Query, page, perPage int64, preloads ...string) ([]*T, *Paginator, error)
 		Select(ctx context.Context, target interface{}, query string, args ...interface{}) error
 	}

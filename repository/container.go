@@ -40,7 +40,7 @@ func NewRepository[T models.Models](client database.Client) *Repository[T] {
 var _ RepoInterface[models.Shared] = (*Repository[models.Shared])(nil)
 
 func (r *Repository[T]) Create(ctx context.Context, data T) (*T, error) {
-	if preValidator, ok := interface{}(data).(models.PreValidator); ok {
+	if preValidator, ok := any(&data).(models.PreValidator); ok {
 		preValidator.PreValidate()
 	}
 
@@ -51,12 +51,15 @@ func (r *Repository[T]) Create(ctx context.Context, data T) (*T, error) {
 	return &data, nil
 }
 
-func (r *Repository[T]) FindOne(ctx context.Context, queryFilter *Query) (*T, error) {
+func (r *Repository[T]) FindOne(ctx context.Context, queryFilter *Query, preloads ...string) (*T, error) {
 	var result *T
 	db := r.db.WithContext(ctx)
 
 	if queryFilter != nil {
 		db = db.Where(queryFilter.query, queryFilter.args...)
+	}
+	for _, preload := range preloads {
+		db = db.Preload(preload)
 	}
 
 	if err := db.First(&result).Error; err != nil {
@@ -115,7 +118,7 @@ func (r *Repository[T]) DeleteMany(ctx context.Context, queryFilter *Query) erro
 }
 
 func (r *Repository[T]) Update(ctx context.Context, dataObject T) (*T, error) {
-	if preValidator, ok := interface{}(dataObject).(models.PreValidator); ok {
+	if preValidator, ok := any(&dataObject).(models.PreValidator); ok {
 		preValidator.PreValidate()
 	}
 

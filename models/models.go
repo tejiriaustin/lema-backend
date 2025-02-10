@@ -8,12 +8,8 @@ import (
 
 type (
 	Models interface {
-		Initialize(id uuid.UUID, now time.Time)
 		GetID() uuid.UUID
-		SetID(id uuid.UUID)
-		SetUpdatedAt()
 		GetVersion() uint
-		SetVersion(v uint)
 	}
 
 	PreValidator interface {
@@ -35,33 +31,16 @@ type Shared struct {
 	Version   uint       `json:"version" gorm:"_version"`
 }
 
+func (m Shared) PreValidate() {}
+
 var _ Models = &Shared{}
 
 func (m Shared) GetID() uuid.UUID {
 	return m.ID
 }
 
-func (m Shared) SetID(id uuid.UUID) {
-	m.ID = id
-}
-
 func (m Shared) GetVersion() uint {
 	return m.Version
-}
-
-func (m Shared) SetVersion(v uint) {
-	m.Version = v
-}
-
-func (m Shared) SetUpdatedAt() {
-	t := time.Now().UTC()
-	m.UpdatedAt = &t
-}
-
-func (m Shared) Initialize(id uuid.UUID, now time.Time) {
-	m.ID = id
-	t := now.UTC()
-	m.CreatedAt = &t
 }
 
 func (m Shared) BeforeCreate(tx *gorm.DB) error {

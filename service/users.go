@@ -82,7 +82,7 @@ func (s *UserService) GetUserByID(ctx context.Context,
 ) (*models.User, error) {
 	filter := repository.NewQueryFilter().Where("id = ?", userID)
 
-	user, err := userRepo.FindOne(ctx, filter)
+	user, err := userRepo.FindOne(ctx, filter, "Address")
 	if err != nil || user == nil {
 		return nil, errors.New("user not found")
 	}

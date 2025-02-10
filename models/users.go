@@ -1,6 +1,7 @@
 package models
 
 import (
+	"fmt"
 	"github.com/google/uuid"
 	"time"
 )
@@ -14,6 +15,7 @@ type User struct {
 }
 
 func (u *User) PreValidate() {
+	fmt.Println("called prevalidate")
 	if u.ID == uuid.Nil {
 		u.ID = uuid.New()
 	}
