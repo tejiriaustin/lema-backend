@@ -4,13 +4,11 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/google/uuid"
-	"github.com/tejiriaustin/lema/logger"
 	"gorm.io/gorm"
 	"log"
-	"time"
 
 	"github.com/tejiriaustin/lema/database"
+	"github.com/tejiriaustin/lema/logger"
 	"github.com/tejiriaustin/lema/models"
 )
 
@@ -42,9 +40,10 @@ func NewRepository[T models.Models](client database.Client) *Repository[T] {
 var _ RepoInterface[models.Shared] = (*Repository[models.Shared])(nil)
 
 func (r *Repository[T]) Create(ctx context.Context, data T) (*T, error) {
-	data.SetVersion(1) // Initialize version to 1 for new records
-	data.Initialize(uuid.New(), time.Now())
-	fmt.Println(data)
+	if preValidator, ok := interface{}(data).(models.PreValidator); ok {
+		preValidator.PreValidate()
+	}
+
 	result := r.db.WithContext(ctx).Create(&data)
 	if result.Error != nil {
 		return &data, result.Error
@@ -69,7 +68,7 @@ func (r *Repository[T]) FindOne(ctx context.Context, queryFilter *Query) (*T, er
 	return result, nil
 }
 
-func (r *Repository[T]) FindManyPaginated(ctx context.Context, queryFilter *Query, page, perPage int64) ([]*T, *Paginator, error) {
+func (r *Repository[T]) FindManyPaginated(ctx context.Context, queryFilter *Query, page, perPage int64, preloads ...string) ([]*T, *Paginator, error) {
 	paginator := newPaginator(page, perPage)
 	paginator.setOffset()
 
@@ -88,6 +87,10 @@ func (r *Repository[T]) FindManyPaginated(ctx context.Context, queryFilter *Quer
 	paginator.setTotalPages()
 	paginator.setPrevPage()
 	paginator.setNextPage()
+
+	for _, preload := range preloads {
+		db = db.Preload(preload)
+	}
 
 	var results []*T
 	if err := db.Offset(int(paginator.Offset)).Limit(int(paginator.PerPage)).Find(&results).Error; err != nil {
@@ -112,13 +115,13 @@ func (r *Repository[T]) DeleteMany(ctx context.Context, queryFilter *Query) erro
 }
 
 func (r *Repository[T]) Update(ctx context.Context, dataObject T) (*T, error) {
-	currentVersion := dataObject.GetVersion()
-	newVersion := currentVersion + 1
-	dataObject.SetVersion(newVersion)
+	if preValidator, ok := interface{}(dataObject).(models.PreValidator); ok {
+		preValidator.PreValidate()
+	}
 
 	err := r.db.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
 		result := tx.Model(&dataObject).
-			Where("_version = ?", currentVersion).
+			Where("_version = ?", dataObject.GetVersion()-1).
 			Updates(dataObject)
 
 		if result.Error != nil {
@@ -133,9 +136,7 @@ func (r *Repository[T]) Update(ctx context.Context, dataObject T) (*T, error) {
 	})
 
 	if err != nil {
-		// Revert version change on error
-		dataObject.SetVersion(currentVersion)
-		return &dataObject, err
+		return nil, err
 	}
 
 	return &dataObject, nil

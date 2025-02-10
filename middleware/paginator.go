@@ -14,8 +14,8 @@ func ReadPaginationOptions() gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		params := ctx.Params
 
-		if page, _ := params.Get("page"); page != "" {
-			pageNum, err := strconv.ParseInt(page, 10, 64)
+		if pageNumber, _ := params.Get("pageNumber"); pageNumber != "" {
+			pageNum, err := strconv.ParseInt(pageNumber, 10, 64)
 			if err != nil {
 				response.FormatResponse(ctx, http.StatusBadRequest, "page number must be a number", nil)
 				return
@@ -24,8 +24,8 @@ func ReadPaginationOptions() gin.HandlerFunc {
 			ctx.Set(string(constants.ContextKeyPageNumber), pageNum)
 		}
 
-		if perPage, _ := params.Get("per_page"); perPage != "" {
-			perPageNum, err := strconv.ParseInt(perPage, 10, 64)
+		if pageSize, _ := params.Get("pageSize"); pageSize != "" {
+			perPageNum, err := strconv.ParseInt(pageSize, 10, 64)
 			if err != nil {
 				response.FormatResponse(ctx, http.StatusBadRequest, "per page number must be a number", nil)
 				return

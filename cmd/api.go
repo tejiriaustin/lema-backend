@@ -40,12 +40,7 @@ func startApi(cmd *cobra.Command, args []string) {
 	config := setApiEnvironment()
 
 	dbCfg := &database.Config{
-		Host:     config.GetAsString(constants.DbHost),
-		Port:     config.GetAsString(constants.DbPort),
-		User:     config.GetAsString(constants.DbUser),
-		Password: config.GetAsString(constants.DbPassword),
-		DBName:   config.GetAsString(constants.DbName),
-		SSLMode:  config.GetAsString(constants.DbSslMode),
+		DB: config.GetAsString(constants.DB),
 	}
 	dbConn, err := database.Initialize(dbCfg)
 	if err != nil {
@@ -77,11 +72,7 @@ func setApiEnvironment() env.Environment {
 	staticEnvironment.
 		SetEnv(constants.Port, env.GetEnv(constants.Port, "8080")).
 		SetEnv(constants.RedisDsn, env.MustGetEnv(constants.RedisDsn)).
-		SetEnv(constants.DbHost, env.MustGetEnv(constants.DbHost)).
-		SetEnv(constants.DbPort, env.MustGetEnv(constants.DbPort)).
-		SetEnv(constants.DbUser, env.MustGetEnv(constants.DbUser)).
-		SetEnv(constants.DbPassword, env.MustGetEnv(constants.DbPassword)).
-		SetEnv(constants.DbName, env.MustGetEnv(constants.DbName)).
+		SetEnv(constants.DB, env.MustGetEnv(constants.DB)).
 		SetEnv(constants.ShouldAutoMigrate, env.MustGetEnv(constants.ShouldAutoMigrate)).
 		SetEnv(constants.JwtSecret, env.MustGetEnv(constants.JwtSecret)).
 		SetEnv(constants.FrontendUrl, env.MustGetEnv(constants.FrontendUrl))

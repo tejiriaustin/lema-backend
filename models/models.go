@@ -2,17 +2,22 @@ package models
 
 import (
 	"github.com/google/uuid"
+	"gorm.io/gorm"
 	"time"
 )
 
 type (
 	Models interface {
 		Initialize(id uuid.UUID, now time.Time)
-		GetId() string
+		GetID() uuid.UUID
 		SetID(id uuid.UUID)
 		SetUpdatedAt()
 		GetVersion() uint
 		SetVersion(v uint)
+	}
+
+	PreValidator interface {
+		PreValidate()
 	}
 
 	AccountInfo struct {
@@ -23,7 +28,7 @@ type (
 )
 
 type Shared struct {
-	ID        uuid.UUID  `json:"id" gorm:"_id"`
+	ID        uuid.UUID  `json:"id" gorm:"type:uuid;primaryKey;default:uuid_generate_v4()"`
 	CreatedAt *time.Time `json:"created_at" gorm:"created_at"`
 	UpdatedAt *time.Time `json:"updated_at" gorm:"updated_at"`
 	DeletedAt *time.Time `json:"deleted_at" gorm:"deleted_at"`
@@ -32,8 +37,8 @@ type Shared struct {
 
 var _ Models = &Shared{}
 
-func (m Shared) GetId() string {
-	return m.ID.String()
+func (m Shared) GetID() uuid.UUID {
+	return m.ID
 }
 
 func (m Shared) SetID(id uuid.UUID) {
@@ -57,4 +62,11 @@ func (m Shared) Initialize(id uuid.UUID, now time.Time) {
 	m.ID = id
 	t := now.UTC()
 	m.CreatedAt = &t
+}
+
+func (m Shared) BeforeCreate(tx *gorm.DB) error {
+	if m.ID == uuid.Nil {
+		m.ID = uuid.New()
+	}
+	return nil
 }

@@ -25,7 +25,6 @@ func Start(
 	router := gin.New()
 
 	router.Use(
-		middleware.Authorize(conf),
 		middleware.CORSMiddleware(),
 		middleware.DefaultStructuredLogs(),
 		middleware.ReadPaginationOptions(),

@@ -2,11 +2,11 @@ package database
 
 import (
 	"fmt"
+	"gorm.io/driver/sqlite"
 	"log"
 	"os"
 	"time"
 
-	"gorm.io/driver/postgres"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
 )
@@ -16,12 +16,7 @@ type (
 		DB *gorm.DB
 	}
 	Config struct {
-		Host     string
-		Port     string
-		User     string
-		Password string
-		DBName   string
-		SSLMode  string
+		DB string
 	}
 )
 
@@ -39,11 +34,6 @@ var _ Connection = (*Client)(nil)
 // Initialize creates a connection to the database and
 // stores the reference to `DB` which can be used for further database operations
 func Initialize(config *Config) (*Client, error) {
-	dsn := fmt.Sprintf(
-		"host=%s port=%s user=%s password=%s dbname=%s sslmode=%s",
-		config.Host, config.Port, config.User, config.Password, config.DBName, config.SSLMode,
-	)
-
 	newLogger := logger.New(
 		log.New(os.Stdout, "\r\n", log.LstdFlags), // io writer
 		logger.Config{
@@ -53,8 +43,12 @@ func Initialize(config *Config) (*Client, error) {
 		},
 	)
 
-	db, err := gorm.Open(postgres.Open(dsn), &gorm.Config{
-		Logger: newLogger,
+	db, err := gorm.Open(sqlite.Open(config.DB), &gorm.Config{
+		PrepareStmt: true,
+		Logger:      newLogger,
+		NowFunc: func() time.Time {
+			return time.Now().Local()
+		},
 	})
 
 	if err != nil {

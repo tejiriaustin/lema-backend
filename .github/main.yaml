@@ -1,0 +1,95 @@
+name: Deploy to EC2
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+permissions:
+  id-token: write
+  contents: read
+  pull-requests: write
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: 'go.mod'
+          cache: true
+
+      - name: Install mockery
+        run: go install github.com/vektra/mockery/v3@latest
+
+      - name: Generate mocks
+        run: make mocks
+
+      - name: Run tests
+        run: make test
+
+      - name: Upload coverage
+        uses: codecov/codecov-action@v3
+        with:
+          files: ./cover.out.tmp
+          fail_ci_if_error: true
+
+  deploy:
+    needs: test
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version-file: 'go.mod'
+          cache: true
+
+      - name: Build
+        run: CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o main
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::${{ secrets.AWS_ACCOUNT_ID }}:role/${{ secrets.AWS_ROLE_NAME }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: Upload binary to S3
+        run: |
+          aws s3 cp main s3://${{ secrets.DEPLOY_BUCKET }}/main
+
+      - name: Deploy using AWS Systems Manager
+        run: |
+          aws ssm send-command \
+            --targets "Key=tag:Name,Values=${{ secrets.EC2_INSTANCE_NAME }}" \
+            --document-name "AWS-RunShellScript" \
+            --parameters commands=[
+              "aws s3 cp s3://${{ secrets.DEPLOY_BUCKET }}/main /home/ec2-user/app/main",
+              "chmod +x /home/ec2-user/app/main",
+              "sudo tee /etc/systemd/system/goapp.service << EOF
+              [Unit]
+              Description=Go API Application
+              After=network.target
+          
+              [Service]
+              Type=simple
+              User=ec2-user
+              WorkingDirectory=/home/ec2-user/app
+              ExecStart=/home/ec2-user/app/main api
+              Restart=always
+              Environment=ENV=production
+          
+              [Install]
+              WantedBy=multi-user.target
+              EOF",
+              "sudo systemctl daemon-reload",
+              "sudo systemctl enable goapp",
+              "sudo systemctl restart goapp"
+            ]

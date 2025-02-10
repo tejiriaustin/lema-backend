@@ -106,18 +106,10 @@ func (c *UserController) GetUsers(
 	usersRepo *repository.Repository[models.User],
 ) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
-		var req requests.GetUserRequest
-
-		err := ctx.BindJSON(&req)
-		if err != nil {
-			response.FormatResponse(ctx, http.StatusBadRequest, err.Error(), nil)
-			return
-		}
-
 		input := service.GetUsersInput{
 			Pager: service.Pager{
 				Page:    service.GetPageNumberFromContext(ctx),
-				PerPage: service.GetPerPageLimitFromContext(ctx),
+				PerPage: service.GetPageSizeLimitFromContext(ctx),
 			},
 		}
 

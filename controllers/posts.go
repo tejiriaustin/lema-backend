@@ -76,7 +76,7 @@ func (c *PostController) GetPosts(
 			UserID: userID,
 			Pager: service.Pager{
 				Page:    service.GetPageNumberFromContext(ctx),
-				PerPage: service.GetPerPageLimitFromContext(ctx),
+				PerPage: service.GetPageSizeLimitFromContext(ctx),
 			},
 		}
 

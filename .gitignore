@@ -2,3 +2,5 @@
 .idea
 .env
 testutils/mocks
+lemadatabase.db
+main

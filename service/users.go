@@ -41,13 +41,14 @@ func (s *UserService) CreateUser(ctx context.Context,
 	input CreateUserInput,
 	userRepo repository.RepoInterface[models.User],
 ) (*models.User, error) {
-	post := models.User{
+
+	user := models.User{
 		FullName: input.FullName,
 		Email:    input.Email,
 		Address:  input.Address,
 	}
 
-	createdPost, err := userRepo.Create(ctx, post)
+	createdUser, err := userRepo.Create(ctx, user)
 	if err != nil {
 		s.lemaLogger.Error("failed to create post",
 			err,
@@ -57,16 +58,16 @@ func (s *UserService) CreateUser(ctx context.Context,
 		)
 		return nil, err
 	}
-	return createdPost, nil
+
+	return createdUser, nil
 }
 
 func (s *UserService) GetUsers(ctx context.Context,
 	input GetUsersInput,
 	userRepo repository.RepoInterface[models.User],
 ) ([]*models.User, *repository.Paginator, error) {
-	filter := repository.NewQueryFilter()
 
-	users, paginate, err := userRepo.FindManyPaginated(ctx, filter, input.Page, input.PerPage)
+	users, paginate, err := userRepo.FindManyPaginated(ctx, nil, input.Page, input.PerPage, "Address")
 	if err != nil {
 		s.lemaLogger.Error("failed to get users", err)
 		return nil, nil, err
@@ -79,7 +80,7 @@ func (s *UserService) GetUserByID(ctx context.Context,
 	userID string,
 	userRepo repository.RepoInterface[models.User],
 ) (*models.User, error) {
-	filter := repository.NewQueryFilter().Where("id", userID)
+	filter := repository.NewQueryFilter().Where("id = ?", userID)
 
 	user, err := userRepo.FindOne(ctx, filter)
 	if err != nil || user == nil {
